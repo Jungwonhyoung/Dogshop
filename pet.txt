@@ -1,0 +1,226 @@
+CREATE TABLE PET(
+    PET_NUM NUMBER PRIMARY KEY 
+    , PET_NAME VARCHAR2(100) NOT NULL
+    , PET_BREED VARCHAR2(200)
+    , PET_TELL VARCHAR2(100)
+    , PET_ADDR VARCHAR2(200)
+   
+);
+CREATE TABLE VISIT(
+    VISIT_NUM NUMBER PRIMARY KEY
+    , VISIT_STYLE VARCHAR2(300)
+    , VISIT_MEMO VARCHAR2(300)
+    , VISIT_DATE DATE DEFAULT SYSDATE
+    , PAY_TYPE VARCHAR2(50)
+    , PAY_MONEY NUMBER
+    , PET_NUM NUMBER NOT NULL REFERENCES PET(PET_NUM) 
+);
+
+SELECT PET_NUM as PETNUM
+    , PET_NAME
+    , PET_BREED
+    , PET_TELL
+    , PET_ADDR
+    , VISIT_STYLE
+    , VISIT_MEMO
+    , VISIT_DATE
+    , PAY_TYPE
+    , PAY_MONEY
+    , VISIT_NUM
+FROM PET,VISIT
+WHERE PET.PET_NUM = VISIT.PET_NUM
+ORDER BY PET_NUM ASC;
+
+
+    
+    
+select * from pet;
+select * from visit;
+delete pet;
+delete visit;
+drop table pet;
+DROP TABLE VISIT;
+
+
+
+SELECT SUM(PAY_MONEY)
+		FROM PET
+		WHERE PET_DATE LIKE '%2022/05%';
+        
+        
+SELECT SUM(PAY_MONEY)
+FROM PET
+WHERE TO_CHAR(PET_DATE, 'YYYY-MM-DD')  = '2022-05-06';
+
+SELECT * FROM PET;
+
+SELECT TO_CHAR(PET_DATE, 'DD'), SUM(PAY_MONEY) 
+FROM PET
+WHERE TO_CHAR(PET_DATE, 'YYYYMM') = '202205'
+GROUP BY TO_CHAR(PET_DATE, 'DD');
+
+SELECT DISTINCT PET_NAME
+    ,PET_BREED
+    , PET_TELL
+    ,PET_ADDR
+FROM PET
+WHERE PET_TELL LIKE '_________1111'
+ORDER BY PET_TELL;
+
+
+SELECT PET_NUM
+			, PET_NAME
+			, PET_DATE
+			, PET_BREED
+			, PET_STYLE
+			, PET_MEMO
+			, PET_TELL
+			, PAY_TYPE
+			, PAY_MONEY
+			, PET_ADDR
+		FROM PET
+		ORDER BY PET_NUM ASC;
+--SELECT PET_NUM
+--    , PET_NAME
+--    , PET_TELL
+--FROM PET
+--WHERE PET_TELL = '_________'||#{petTell}
+ '%'||#{keyword}||'%'
+
+INSERT INTO PET(
+			PET_NUM
+			, PET_NAME
+			, PET_BREED
+			, PET_STYLE
+			, PET_MEMO
+			, PET_TELL
+			, PAY_TYPE
+			, PAY_MONEY
+			, PET_ADDR
+            , pet_date
+		) VALUES (
+		 (SELECT NVL(MAX(PET_NUM), 0) + 1 FROM PET)
+		, '쿠키'
+		, '푸들'
+		, '3mm'
+		, '착함'
+		, '010-1142-1111'
+		, '카드'
+		, 50000
+		, '울산 동구'
+        , to_date('20220605', 'YYYYMMDD')
+		);
+        
+        	INSERT ALL
+                INTO PET(	
+                PET_NUM
+                , PET_NAME
+                , PET_BREED
+                , PET_TELL
+                , PET_ADDR)
+                VALUES(
+                 (SELECT NVL(MAX(PET_NUM), 0) + 1 FROM PET)
+                 ,#{petName}
+                 ,#{petBreed}
+                 ,#{petTell}
+                 ,#{petAddr}
+                )
+                INTO VISIT(
+                 VISIT_NUM
+                , VISIT_MEMO
+                , VISIT_STYLE
+                , PAY_TYPE
+                , PAY_MONEY
+                , PET_NUM)
+                VALUES(
+                 (SELECT NVL(MAX(VISIT_NUM), 0) + 1 FROM VISIT)
+                , #{visitMemo}
+                , #{visitStyle}
+                , #{payType}
+                , #{payMoney}
+                 , (SELECT NVL(MAX(PET_NUM), 0) FROM PET)
+                )
+            SELECT * FROM DUAL;
+            
+        
+        
+        
+	INSERT INTO VISIT(
+			VISIT_NUM
+			, VISIT_MEMO
+			, VISIT_STYLE
+			, PAY_TYPE
+			, PAY_MONEY
+			, PET_NUM
+            ,VISIT_DATE
+		) VALUES (
+		 (SELECT NVL(MAX(VISIT_NUM), 0) + 1 FROM VISIT)
+			,'MEMO'
+			,'STYLE'
+			,'카드'
+			,'0000'
+			, 1
+            ,to_date('20220405', 'YYYYMMDD')
+		);
+        
+SELECT  P.PET_NUM
+		    , PET_NAME
+		    , PET_BREED
+		    , PET_TELL
+		    , PET_ADDR
+		    , VISIT_STYLE
+		    , VISIT_MEMO
+		    , VISIT_DATE
+		    , PAY_TYPE
+		    , PAY_MONEY
+		    , VISIT_NUM
+     
+FROM PET P, VISIT V
+WHERE P.PET_NUM = V.PET_NUM
+
+
+
+SELECT  PET.PET_NUM
+		    , PET_NAME
+		    , PET_BREED
+		    , PET_TELL
+		    , PET_ADDR
+		    , VISIT_STYLE
+		    , VISIT_MEMO
+		    , VISIT_DATE
+		    , PAY_TYPE
+		    , PAY_MONEY
+		    , VISIT_NUM
+        ,VISIT.PET_NUM
+
+FROM PET P, VISIT V
+WHERE P.PET_NUM = V.PET_NUM;
+
+SELECT  P.PET_NUM
+		    , PET_NAME
+		    , PET_BREED
+		    , PET_TELL
+		    , PET_ADDR
+		    , VISIT_STYLE
+		    , VISIT_MEMO
+		    , VISIT_DATE
+		    , PAY_TYPE
+		    , PAY_MONEY
+		    , VISIT_NUM
+FROM PET P, VISIT V
+WHERE P.PET_NUM = 1 AND P.PET_NUM = V.PET_NUM;
+
+select * from visit;
+
+SELECT 
+		    VISIT_STYLE
+		    , VISIT_MEMO
+		    , VISIT_DATE
+		    , PAY_TYPE
+		    , PAY_MONEY
+		     
+FROM VISIT V
+WHERE V.PET_NUM = 1;
+
+
+SELECT 

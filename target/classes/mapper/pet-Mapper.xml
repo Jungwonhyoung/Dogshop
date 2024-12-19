@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 모든 SQL문을 mapper태그 안에 작성 -->
+<mapper namespace="petMapper">
+	<resultMap type="com.kh.pet.vo.PetVO" id="pet">
+		<id column="PET_NUM" property="petNum"/>
+		<result column="PET_NAME" property="petName"/>
+		<result column="PET_BREED" property="petBreed"/>
+		<result column="PET_TELL" property="petTell"/>
+		<result column="PET_ADDR" property="petAddr"/>
+		<association property="visitVO" resultMap="visit"/>
+		<collection property="visitList" resultMap="visit"/>
+	</resultMap>
+	
+	<resultMap type="com.kh.pet.vo.VisitVO" id="visit">
+		<id column="VISIT_NUM" property="visitNum"/>
+		<result column="VISIT_STYLE" property="visitStyle"/>
+		<result column="VISIT_MEMO" property="visitMemo"/>
+		<result column="VISIT_DATE" property="visitDate"/>	
+		<result column="PAY_TYPE" property="payType"/>
+		<result column="PAY_MONEY" property="payMoney"/>
+		
+		
+		<!-- 일별 판매 금액을 나태내기 위해 추가 -->
+		<result column="SELL_DATE" property="sellDate"/>
+		<result column="SELL_MONEY" property="sellMoney"/>
+	</resultMap>
+	
+	<insert id="insertPetCutInfo">
+		<!-- <if test="petNum == null and petNum.equals('')"> -->
+		<if test="petNum == 0">
+			INSERT ALL
+                INTO PET(	
+                PET_NUM
+                , PET_NAME
+                , PET_BREED
+                , PET_TELL
+                , PET_ADDR)
+                VALUES(
+                 (SELECT NVL(MAX(PET_NUM), 0) + 1 FROM PET)
+                 ,#{petName}
+                 ,#{petBreed}
+                 ,#{petTell}
+                 ,#{petAddr}
+                )
+                INTO VISIT(
+                 VISIT_NUM
+                , VISIT_MEMO
+                , VISIT_STYLE
+                , PAY_TYPE
+                , PAY_MONEY
+                , PET_NUM)
+                VALUES(
+                 (SELECT NVL(MAX(VISIT_NUM), 0) + 1 FROM VISIT)
+                , #{visitVO.visitMemo}
+                , #{visitVO.visitStyle}
+                , #{visitVO.payType}
+                , #{visitVO.payMoney}
+                 , (SELECT NVL(MAX(PET_NUM), 0) + 1 FROM PET)
+                )
+            SELECT * FROM DUAL
+        </if>
+       	<if test="petNum != 0">
+			INSERT INTO VISIT(
+				VISIT_NUM
+				, VISIT_MEMO
+				, VISIT_STYLE
+				, PAY_TYPE
+				, PAY_MONEY
+				, PET_NUM
+			) VALUES (
+			 (SELECT NVL(MAX(VISIT_NUM), 0) + 1 FROM VISIT)
+				  , #{visitVO.visitMemo}
+                , #{visitVO.visitStyle}
+                , #{visitVO.payType}
+                , #{visitVO.payMoney}
+				, #{petNum}
+			)
+		</if>
+	</insert>
+	
+	<insert id="insertVisitCutInfo">
+		
+	</insert>
+	
+	<select id="selectPetList" resultMap="pet">
+		SELECT  PET.PET_NUM
+		    , PET_NAME
+		    , PET_BREED
+		    , PET_TELL
+		    , PET_ADDR
+		    , VISIT_STYLE
+		    , VISIT_MEMO
+		    , VISIT_DATE
+		    , PAY_TYPE
+		    , PAY_MONEY
+		    , VISIT_NUM
+		FROM PET, VISIT
+		WHERE PET.PET_NUM = VISIT.PET_NUM 
+		<if test = "searchValue != null and !searchValue.equals('')">
+		AND (PET_NAME LIKE '%'||#{searchValue}||'%' OR PET_TELL LIKE '%'||#{searchValue}||'%')
+		</if>
+		
+		ORDER BY PET_NUM ASC
+	</select>
+	
+	<select id="selectPetList2" resultMap="pet">
+		SELECT  PET.PET_NUM
+		    , PET_NAME
+		    , PET_BREED
+		    , PET_TELL
+		    , PET_ADDR
+		    , VISIT_STYLE
+		    , VISIT_MEMO
+		    , VISIT_DATE
+		    , PAY_TYPE
+		    , PAY_MONEY
+		    , VISIT_NUM
+		FROM PET, VISIT
+		WHERE PET.PET_NUM = VISIT.PET_NUM 
+		<if test="visitVO.visitDate != null and !visitVO.visitDate.equals('')">
+		AND TO_CHAR(VISIT_DATE, 'YYYY-MM-DD') = #{visitVO.visitDate}
+		</if>
+		
+		ORDER BY PET_NUM ASC
+	</select>
+	
+	<select id="calculateThatDayMoneyForCalender" resultMap="pet">
+		SELECT TO_CHAR(VISIT_DATE, 'DD') AS SELL_DATE, SUM(PAY_MONEY) AS SELL_MONEY
+		FROM VISIT
+		WHERE TO_CHAR(VISIT_DATE, 'YYYY-MM') = #{visitDate}
+		GROUP BY TO_CHAR(VISIT_DATE, 'DD')
+	</select>
+	
+	<select id="selectPetSearch" resultMap="pet">
+	<!-- 뒷자리 번호 4개로 강아지들을 조회한다. -->
+	SELECT  PET.PET_NUM
+		    , PET_NAME
+		    , PET_BREED
+		    , PET_TELL
+		    , PET_ADDR
+		    , VISIT_STYLE
+		    , VISIT_MEMO
+		    , VISIT_DATE
+		    , PAY_TYPE
+		    , PAY_MONEY
+		    , VISIT_NUM
+	FROM PET,VISIT
+	WHERE PET.PET_NUM = VISIT.PET_NUM AND PET_TELL LIKE '_________'||#{petTell}  
+	ORDER BY PET_TELL ASC
+	</select>
+	
+	
+	<select id="selectDetailPetSearch" resultMap="pet">
+	<!-- 뒷자리 번호 4개로 강아지들을 조회한다. -->
+	SELECT  P.PET_NUM
+		    , PET_NAME
+		    , PET_BREED
+		    , PET_TELL
+		    , PET_ADDR
+		    , VISIT_STYLE
+		    , VISIT_MEMO
+		    , VISIT_DATE
+		    , PAY_TYPE
+		    , PAY_MONEY
+	FROM PET P, VISIT V
+	WHERE P.PET_NUM = V.PET_NUM
+	AND P.PET_NUM = #{petNum}
+	ORDER BY VISIT_NUM ASC
+	</select>
+	
+	<select id="selectSearchPet" resultMap="pet">
+	SELECT  P.PET_NUM
+		    , PET_NAME
+		    , PET_BREED
+		    , PET_TELL
+		    , PET_ADDR
+		    , VISIT_STYLE
+		    , VISIT_MEMO		    
+		    , VISIT_NUM
+	FROM PET P, VISIT V
+	WHERE P.PET_TELL LIKE '_________'||'#{petTell}'AND P.PET_NUM = V.PET_NUM OR P.PET_NAME LIKE #{petTell} AND P.PET_NUM = V.PET_NUM
+	</select>
+	
+	<insert id="InsertVisitInfo">
+
+	
+	</insert>
+	
+	<select id="selectThatDayCutForHome" resultMap="pet">
+		SELECT  P.PET_NUM
+		    , PET_NAME
+		    , PET_BREED
+		    , PET_TELL
+		    , PET_ADDR
+		    , VISIT_NUM
+		    , VISIT_STYLE
+		    , VISIT_MEMO
+            , VISIT_DATE
+		FROM VISIT V,PET P
+		WHERE TO_CHAR(VISIT_DATE, 'YYYY-MM-DD') = #{petDate} AND P.PET_NUM = V.PET_NUM
+		ORDER BY VISIT_DATE
+	</select>
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
